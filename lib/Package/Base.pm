@@ -25,8 +25,9 @@ Package::Base - An abstract base for implementation classes to inherit from
   my $object = My::Package->new(slot1 => 'value1', slot2 => 'value2', slot3 => 'value3');
   #slot3 => 'value3' is silently ignored
 
-  $self->slot1; #returns 'value1'
-  $self->slot2; #returns 'value2'
+  $object->slot1; #returns 'value1'
+  $object->slot2; #returns 'value2'
+  $object->slot3; #error, method undefined
 
 =head1 DESCRIPTION
 

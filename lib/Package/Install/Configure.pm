@@ -386,6 +386,7 @@ sub process_interactive {
         if(!$self->validate_type($type,$response)){
           $valid = 0;
         } else {
+          #commit it
           $self->ini()->setval($section,$param,$response);
         }
       }
@@ -400,6 +401,10 @@ sub process_interactive {
           } else {
             $self->ini()->setval($section,$param,@response);
           }
+        }
+        if($valid == 1) {
+          #commit it
+          $self->ini()->setval($section,$param,@response);
         }
       }
       if(!$valid){

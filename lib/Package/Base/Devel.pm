@@ -51,18 +51,18 @@ Package::Base::Devel is:
 
 A few comments on the above configuration stanza:
 
-* Notice there are B<several> (seven) %s strings.  if you guessed that this
-stanza is interpreted using an sprintf() call, you'd be right.  The %s's are
-replaced by the namespace of the package for which logging is being set up,
-or some s/// derivative of that namespace.
+* Notice there are B<several> (seven) %s strings.  If you guessed that this
+stanza is interpreted using an sprintf() call, you are right.  The %s are
+replaced by a mangled version of the namespace of the package for which logging
+is being set up.
 
 * Notice the word DEBUG.  This is the default logging level for any
-class set up with this template.  See </loglevel()> for a listing of valid
+class set up with this template.  See L</loglevel()> for a listing of valid
 strings here.
 
 * This string can have as many %s slots as you like, so you have great flexibility
 as to how you want to set up your configuration stanza.  This string must contain at
-B<at least two> %s's... it's the minimum necessary for a valid configuration stanza.
+B<at least two> %s, as it is the minimum necessary for a valid configuration stanza.
 
 To customize the default configuration stanza, just update
 $Package::Base::Devel::log4perl_template to something else recognizable by
@@ -91,9 +91,9 @@ results.  Consider the following code:
   $b->log->info('this message fails');
   $a->log->info('this message also fails');
 
-The main thing parameter I forsee wanting to change at runtime is the log level.  See
-L<loglevel()> or L<Log::Log4perl> to learn about log levels.  To accomodate this,
-Package::Base::Devel provides the C<loglevel()> shortcut function that allows calls like:
+The main thing you're likely to want to change at runtime is the log level.  See
+L</loglevel()> or L<Log::Log4perl> to learn about log levels.  To accomodate this,
+Package::Base::Devel provides the L</loglevel()> shortcut function that allows calls like:
 
   my $a1 = My::Class::A->new();
   my $a2 = My::Class::A->new();
@@ -127,8 +127,17 @@ use Carp qw(cluck);
 
 our $VERSION = '0.01';
 
-our %logconfig = ();
-our %black = map {$_=>1} qw(Carp); #don't trap signals from these
+#trap signals
+$SIG{__DIE__}  = \&_die;
+$SIG{__WARN__} = \&_warn;
+
+our %logconfig = (''=>'');
+our %black = map {$_=>1} qw(
+                            Carp
+                            ExtUtils::MakeMaker
+                            Log::Log4perl::Logger
+                            Package::Install
+                           ); #don't trap signals from these
 
 our %level = ( #these scalars are exported by Log::Log4perl::Level
               OFF   => $OFF,
@@ -201,8 +210,8 @@ sub is_initialized {
 
 sub init {
   my($self,%arg) = @_;
-
   $self->{'__PackageBaseDevel_init'} = 1;
+
   $self->SUPER::init(%arg);
 
   {
@@ -217,7 +226,8 @@ sub init {
     $Data::Dumper::Terse = $tmp2;
   }
 
-  $self->log();
+
+#  $self->log();
   return $self;
 }
 
@@ -238,49 +248,22 @@ sub init {
 
 sub log {
   my($self) = @_;
-
   $self->init() if ref($self) && !$self->is_initialized();
 
-  if(get_logger(ref($self) || $self) eq get_logger("")){
-    $self->logconfig( _mangle_package(ref($self)) );
+  #warn get_logger(ref($self)||$self);
+  #warn get_logger("");
+
+  my $class = ref($self) || $self;
+
+  $logconfig{$class} = '' if !defined($logconfig{$class});
+
+  if($logconfig{$class} eq $logconfig{''}){
+    $self->logconfig( _mangle_package($class) );
   }
 
-  my $logger = get_logger(ref($self) || $self);
+  my $logger = get_logger($class);
   return $logger;
 }
-
-=head2 loglevel()
-
- Usage   : $self->loglevel('FATAL'); #only log fatal messages
- Returns : 
- Args    : a level string.  valid values, in order of ascending verbosity:
-           OFF, FATAL, ERROR, WARN, INFO, DEBUG, ALL
- Function: adjust Log::Log4perl::Logger logging level
-
-
-=cut
-
-sub loglevel {
-  my ($self,$level) = @_;
-
-  $self->init() if ref($self) && !$self->is_initialized();
-
-  if(defined($level{$level})){
-    $self->log->level($level{$level});
-  } elsif(defined($level)) {
-    $self->log->error("Log level of '$level' is not valid, no action taken.  Valid values are: ".join(" ",keys %level));
-    return undef;
-  }
-
-  foreach my $key (keys %level){
-    return $key if $level{$key} == $self->log->level(); #stringify the numeric level
-  }
-
-  #unrecognized numeric levels get here.  should never happen
-  $self->log->error("unexpected log level ".$self->log->level.".  please inform the author of ".__PACKAGE__);
-  return $self->log->level;
-}
-
 
 =head2 logconfig()
 
@@ -301,18 +284,21 @@ sub loglevel {
 
 sub logconfig {
   my($self,$stanza) = @_;
-
   $self->init() if ref($self) && !$self->is_initialized();
+
+  my $class = ref($self) || $self;
 
   my $changed = 0;
 
   #initialize the logger, stanza doesn't exist for this package yet
-  if($stanza eq _mangle_package(ref($self))){
-    $changed++;
-    my $pack = ref($self) || $self;
+  if($stanza eq _mangle_package($class)){
+    $changed = 1;
+    my $pack = $class;
     $pack =~ s/::/./g;
-    my $name = _mangle_package(ref($self) || $self);
+    my $name = _mangle_package($class);
     my $logformat = $log4perl_template;
+
+    #warn "********".$logformat;
 
     my @i = $logformat =~ /%s/gs;
     my $i = scalar(@i);
@@ -323,18 +309,60 @@ sub logconfig {
     $stanza = sprintf($logformat, $pack, @slots );
 
   #got a new  stanza, reinitialize the logger
-  } elsif(defined($stanza) and !ref($stanza) and $stanza ne $logconfig{ref($self) || $self}){
-    $changed++;
+  } elsif(defined($stanza) and !ref($stanza) and $stanza ne $logconfig{$class}){
+
+    $changed = 2;
   }
 
   if($changed){
-    $logconfig{ref($self) || $self} = $stanza;
+    $logconfig{$class} = $stanza;
     my $all = join "\n", values %logconfig;
     Log::Log4perl->init(\$all);
-    get_logger(ref($self) || $self)->info("(re)created logger for ".(ref($self)||$self));
+
+    if($changed == 1){
+      get_logger($class)->info("created logger for ".$class);
+    } elsif($changed == 2){
+      get_logger($class)->info("recreated logger for ".$class);
+    } else {
+      get_logger($class)->info("what does $changed mean? ".$class);
+    }
+
+  } elsif(!Log::Log4perl->initialized){
+    Log::Log4perl->init(); #FIXME
   }
 
-  return $logconfig{ref($self) || $self};
+  return $logconfig{$class};
+}
+
+=head2 loglevel()
+
+ Usage   : $self->loglevel('FATAL'); #only log fatal messages
+ Returns : 
+ Args    : a level string.  valid values, in order of ascending verbosity:
+           OFF, FATAL, ERROR, WARN, INFO, DEBUG, ALL
+ Function: adjust Log::Log4perl::Logger logging level
+
+
+=cut
+
+sub loglevel {
+  my ($self,$level) = @_;
+  $self->init() if ref($self) && !$self->is_initialized();
+
+  if(defined($level{$level})){
+    $self->log->level($level{$level});
+  } elsif(defined($level)) {
+    $self->log->error("Log level of '$level' is not valid, no action taken.  Valid values are: ".join(" ",keys %level));
+    return undef;
+  }
+
+  foreach my $key (keys %level){
+    return $key if $level{$key} == $self->log->level(); #stringify the numeric level
+  }
+
+  #unrecognized numeric levels get here.  should never happen
+  $self->log->error("unexpected log level ".$self->log->level.".  please inform the author of ".__PACKAGE__);
+  return $self->log->level;
 }
 
 =head2 _mangle_package()
@@ -414,10 +442,6 @@ sub _warn {
   $Log::Log4perl::caller_depth--;
   return 1;
 };
-
-#trap signals
-$SIG{__DIE__}  = \&_die;
-$SIG{__WARN__} = \&_warn;
 
 1;
 __END__

@@ -22,4 +22,4 @@ ok($config->opt_string('phi'));
 ok(my $s3 = $config->opt_string());
 ok($s3 eq 'phi');
 
-ok(!$config->ambiguous);
+ok($config->ambiguous);

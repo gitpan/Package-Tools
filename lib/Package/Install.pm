@@ -77,12 +77,9 @@ sub compile_manifest {
 
 sub write_makefile {
   my ($self,%arg) = @_;
-
   $self->compile_manifest();
-
   my %pl_files;
   my @exe_files;
-
   if($self->configure->ini()){
     %pl_files = map {$_ => $self->configure->ini()->val('PL_FILES',$_)} $self->configure->ini()->Parameters('PL_FILES');
 

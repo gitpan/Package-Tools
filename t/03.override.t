@@ -92,12 +92,12 @@ BEGIN {
   print STDERR "\nWARNINGS ARE NORMAL HERE\n";
 }
 
-ok my $b_n  = My::New->new();
-ok my $b_i  = My::Init->new();
-ok my $b_ni = My::NewInit->new();
-ok $b_n->log->debug('ok');
-ok $b_i->log->debug('ok');
-ok $b_ni->log->debug('ok');
+ok my $b_n  = My::New->new(),    'b_n';
+ok my $b_i  = My::Init->new(),   'b_i';
+ok my $b_ni = My::NewInit->new(),'b_ni';
+ok $b_n->log->debug('ok'),       'log b_n';
+ok $b_i->log->debug('ok'),       'log b_i';
+ok $b_ni->log->debug('ok'),      'log b_ni';
 
 ok my $d_n  = My::Devel::New->new();
 ok my $d_i  = My::Devel::Init->new();
