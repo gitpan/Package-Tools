@@ -3,15 +3,15 @@ use Package::Install;
 
 my %mm_args = (
                'NAME'         => 'Package-Tools',
-               'VERSION'      => '0.01',
+               'VERSION'      => '0.02',
                'PREREQ_PM'    => {
                                   Carp                => 0,
                                   Config::IniFiles    => 2.38,
-                                  ExtUtils::MakeMaker => 6.17,
+                                  ExtUtils::MakeMaker => 0,
                                   File::Spec          => 0.87,
                                   Getopt::Long        => 2.26,
                                   Log::Log4perl       => 0.47,
-                                  Term::ANSIColor     => 1.07,
+                                  Term::ANSIColor     => 0,
                                   Text::ParseWords    => 3.2,
                                   Text::Wrap          => 2001.0131,
                                  },

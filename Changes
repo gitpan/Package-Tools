@@ -3,3 +3,6 @@ Revision history for Perl extension Package-Tools
 0.01 Thu Sep 30 16:24:13 2004
 	- original version; created by ./bin/pstub 0.01
 
+0.02 Tue Nov  9 15:38:39 PST 2004
+	- fixed a major bug in config caching.  values were
+	  not being cached!

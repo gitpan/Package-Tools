@@ -262,6 +262,8 @@ sub new {
     $self->validate_configuration();
   }
 
+warn Dumper($self->ini());
+
   $self->ini()->WriteConfig(CACHE) if $self->ini();
 
   return $self;
@@ -375,13 +377,18 @@ sub process_interactive {
       my $response = <>;
       chomp $response;
 
-      next if $response eq '';
+      if($response eq ''){
+        print colored("\ryou didn't respond, skipping.  this may break the build",'red')."\n";
+        next;
+      }
 
       my $valid = 1;
       #single
       if($type !~ /s$/){
         if(!$self->validate_type($type,$response)){
           $valid = 0;
+        } else {
+          $self->ini()->setval($section,$param,$response);
         }
       }
       #plural
@@ -390,7 +397,10 @@ sub process_interactive {
         my @response = shellwords($response);
         foreach my $response (@response) {
           if(!$self->validate_type($type,$response)){
-            $valid = 0 and last;
+            $valid = 0;
+            last;
+          } else {
+            $self->ini()->setval($section,$param,@response);
           }
         }
       }
@@ -579,6 +589,5 @@ sub DESTROY {
   my $self = shift;
   $self->ini->WriteConfig(CACHE) if $self->ini();
 }
-
 
 1;
