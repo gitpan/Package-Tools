@@ -1,4 +1,4 @@
-package Package::Install::Configure;
+package Package::Configure;
 
 use strict;
 use Carp qw(confess);
@@ -20,18 +20,18 @@ use constant TEMPLATE => 'pkg_config.in';
 
 =head1 SYNOPSIS
 
-  my $config = Package::Install::Configure->new();
+  my $config = Package::Configure->new();
   my $value1 = $config->setting1();               #get
   $config->setting1('a new value for setting 1'); #set
 
 =head1 DESCRIPTION
 
-Package::Install::Configure - Access package configuration values
+Package::Configure - Access package configuration values
 from command-line options (Getopt::Long style), previously specified
 cached settings, or default values.  This package is a kindred spirit to
 the GNU automake and autoconf tools.
 
-When a Package::Install::Configure object is instantiated, the following
+When a Package::Configure object is instantiated, the following
 happens:
 
   1. A. If F<pkg_config.cache> exists, load it into L</ini()> accessor as a
@@ -67,7 +67,7 @@ You should be familiar with the INI format and L<Config::IniFiles>.
 =head2 RESERVED VARIABLES
 
 These variables have a built-in function and are reserved for use by
-Package::Install::Configure.
+Package::Configure.
 
 * help
 * interactive
@@ -78,7 +78,7 @@ parameters.
 
 =head2 DECLARING CONFIGURATION VARIABLES
 
-Package::Install::Configure recognizes variables in the following INI sections:
+Package::Configure recognizes variables in the following INI sections:
 
 for single value parameters:
 
@@ -216,11 +216,11 @@ for access";
 
 =head2 new()
 
- Usage   : $config = Package::Install::Configure->new();
+ Usage   : $config = Package::Configure->new();
  Function: constructs a new object, reads variables and their default/cached
            values from state files F<pkg_config.in> and F<pkg_config.cache>.
            Also handles command-line arguments by delegating to Getopt::Long.
- Returns : a Package::Install::Configure object
+ Returns : a Package::Configure object
  Args    : none.
 
 =cut
