@@ -262,8 +262,6 @@ sub new {
     $self->validate_configuration();
   }
 
-warn Dumper($self->ini());
-
   $self->ini()->WriteConfig(CACHE) if $self->ini();
 
   return $self;

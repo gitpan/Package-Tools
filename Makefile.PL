@@ -3,7 +3,7 @@ use Package::Install;
 
 my %mm_args = (
                'NAME'         => 'Package-Tools',
-               'VERSION'      => '0.02',
+               'VERSION'      => '0.021',
                'PREREQ_PM'    => {
                                   Carp                => 0,
                                   Config::IniFiles    => 2.38,
